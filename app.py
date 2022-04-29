@@ -48,25 +48,37 @@ def login():
     return render_template('login.html', error=email)
 
 
-@app.route('/login', methods=['POST'])
-def login2Index():
-    email = ""
-    if 'email' in session:
-        return render_template('index.html', error=email)
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    email = None
+    if "email" in session:
+        return render_template('index.html', data=session["email"])
+    else:
+        if (request.method == "GET"):
+            return render_template("login.html", data="email")
+        else:
+            email = request.form["email"]
+            password = request.form["password"]
+            try:
+                user = cuentas.find_one({"correo": (email)})
+                if (user != None):
+                    if(user["contrasena"]==password):
+                        session["email"] = email
+                        return render_template("index.html", data=email)
+                    else:
+                        return render_template("login.html")
+                else:
+                    return render_template("login.html")
+                        
+            except Exception as e:
+                return "%s" % e
 
-    email = request.form['email']
-    password = request.form['password']
-    session['email'] = email
-    session['password'] = password
 
-    return render_template('index.html', error=email)
-
-
-@app.route('/signup', methods=['POST'])
+@app.route('/signup', methods=["GET", "POST"])
 def signup():
     email = ""
     if 'email' in session:
-        return render_template('index.html', error=email)
+        return render_template('index.html', data=email)
     else:
         name = request.form['name']
         email = request.form['email']
@@ -74,7 +86,18 @@ def signup():
         session['email'] = email
         session['password'] = password
         session['name'] = name
-    return render_template('index.html', error=email)
+
+        user = {
+            "matricula": "A1746643",
+            "nombre": name,
+            "correo": email,
+            "contrasena": password
+        }
+        try:
+            cuentas.insert_one(user)
+            return render_template('index.html', data=email)
+        except Exception as e:
+            return "<p>Service error =>: %s %s" % type(e), e
 
 
 @app.route('/logout')
