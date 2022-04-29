@@ -2,7 +2,7 @@ from http import client
 from flask import Flask, redirect, url_for, request, render_template, session
 import datetime
 import pymongo
-from twilio.rest import Client
+from twilio import Client, twiml
 
 # FlASK
 #############################################################
@@ -29,6 +29,17 @@ auth_token = "212e9922845565c0e602aa2771ed655f"
 TwilioClient = Client(account_sid, auth_token)
 
 ############################################################# 
+
+@app.route('/sms', methods=['POST'])
+def sms():
+    number = request.form['From']
+    message_body = request.form['Body']
+
+    resp = twiml.Response()
+    resp.message('Hello {}, you said: {}'.format(number, message_body))
+    return str(resp)
+if __name__ == '__main__':
+    app.run()
 
 @app.route('/')
 def home():
